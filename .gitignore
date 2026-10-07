@@ -1,0 +1,3 @@
+# build output
+/bin/ta_host
+*.o

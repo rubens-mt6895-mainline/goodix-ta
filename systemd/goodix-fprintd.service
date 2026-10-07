@@ -1,0 +1,20 @@
+[Unit]
+Description=Goodix fingerprint service (net.reactivated.Fprint provider, K50)
+Documentation=file:/var/log/goodix-fprintd.log
+After=dbus.service
+Requires=dbus.service
+Conflicts=goodix-fpd.service
+Before=kscreenlocker_greet.service sddm.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/goodix-fprintd
+Restart=always
+RestartSec=2
+# The trustlet owns the sensor: one ta_host at a time, so serialise against the
+# PAM helper's lock file as well.
+RuntimeDirectory=goodix-fprint
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target

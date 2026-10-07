@@ -1,0 +1,24 @@
+[Unit]
+Description=Goodix fingerprint capture daemon (resident trustlet host, no operator input)
+Documentation=file:/run/goodix-fp-fpd.log
+After=local-fs.target sysinit.target
+Before=kscreenlocker_greet.service sddm.service
+# The D-Bus provider (goodix-fprintd.service) parks this unit while it drives the
+# sensor itself for an enroll/verify session: only one ta_host may own spi0.0.
+
+[Service]
+Type=simple
+Environment=GOODIXTA_QUIET=1
+Environment=TA_STATE_FILE=/run/goodix-fp.state
+# Keeps the sensor's own IRQ/FDT loop resident and stamps /run/goodix-fp.state
+# ("<epoch> <count>") whenever a fingerprint matches -- the PAM step then only
+# has to watch that counter, so the user never presses Enter.
+ExecStart=/opt/goodixta/bin/ta_host.v87 /opt/goodixta/ta/goodixfp.ta d
+Restart=always
+RestartSec=5
+Nice=-5
+StandardOutput=append:/run/goodix-fp-fpd.log
+StandardError=append:/run/goodix-fp-fpd.log
+
+[Install]
+WantedBy=multi-user.target

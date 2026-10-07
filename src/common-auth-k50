@@ -1,0 +1,37 @@
+#
+# /etc/pam.d/common-auth - authentication settings common to all services
+#
+# This file is included from other service-specific PAM config files,
+# and should contain a list of the authentication modules that define
+# the central authentication scheme for use on the system
+# (e.g., /etc/shadow, LDAP, Kerberos, etc.).  The default is to use the
+# traditional Unix authentication mechanisms.
+#
+# As of pam 1.0.1-6, this file is managed by pam-auth-update by default.
+# To take advantage of this, it is recommended that you configure any
+# local modules either before or after the default block, and use
+# pam-auth-update to manage selection of other modules.  See
+# pam-auth-update(8) for details.
+
+# here are the per-package modules (the "Primary" block)
+# K50 fingerprint, 2026-10-07 (source of truth: tools/common-auth-k50,
+# helper: tools/goodix-fp-pam.py -> /usr/local/bin/goodix-fp-pam):
+#   * pam_unix runs FIRST, so a correct password unlocks immediately and is
+#     never delayed by the sensor.
+#   * pam_exec below runs only when the password step failed -- i.e. the user
+#     left the field empty ("use the fingerprint") or mistyped it.  It drives
+#     ta_host in TA_PRESS mode and returns 0 on a real match.
+#   * success=2 / success=1 jump over the remaining modules straight to
+#     pam_permit, which needs at least one positive return so the stack can
+#     end in Success.
+auth	optional			pam_echo.so file=/etc/goodix-fp-hint.txt
+auth	[success=2 default=ignore]	pam_unix.so nullok
+auth	[success=1 default=ignore]	pam_exec.so quiet /usr/local/bin/goodix-fp-pam
+# here's the fallback if no module succeeds
+auth	requisite			pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+auth	required			pam_permit.so
+# and here are more per-package modules (the "Additional" block)
+# end of pam-auth-update config

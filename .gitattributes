@@ -1,0 +1,5 @@
+# Keep every text file LF in the repository regardless of the host's
+# core.autocrlf, the shell scripts and the PAM helper break on CRLF.
+* text=auto eol=lf
+*.ta binary
+*.png binary
